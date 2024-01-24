@@ -133,4 +133,32 @@ const deleteJobPost = async (req, res, next) => {
     );
 };
 
-module.exports = { getJobPosts, getJobPostById, createJobPost, deleteJobPost };
+const updateJobPostById = async (req, res, next) => {
+    const { id } = req.params;
+    const updateData = req.body;
+    let updatedJobPost;
+
+    try {
+        updatedJobPost = await updateById(JobPost, id, updateData);
+    } catch (error) {
+        return next(new ApiError(error.message, httpStatus.NOT_FOUND));
+    }
+
+    if (!updatedJobPost) {
+        return next(
+            new ApiError(
+                `There are no job post with id of ${id}`,
+                httpStatus.BAD_REQUEST
+            )
+        );
+    }
+
+    ApiDataSuccess.send(
+        `Job post with id of ${id} updated!`,
+        httpStatus.OK,
+        res,
+        updatedJobPost
+    );
+};
+
+module.exports = { getJobPosts, getJobPostById, createJobPost, deleteJobPost, updateJobPostById };
