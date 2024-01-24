@@ -14,4 +14,7 @@ router.route('/:id').delete(employerController.deleteEmployerById);
 
 router.route('/:id').put(employerController.updateEmployerById);
 
+router.route('/update-password/:id').put(employerController.updateEmployerPassword);
+
+
 module.exports = router;

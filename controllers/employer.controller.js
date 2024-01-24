@@ -161,4 +161,31 @@ const deleteEmployerById = async (req, res, next) => {
     }
 };
 
-module.exports = { getEmployers, getEmployerById, createEmployer, updateEmployerById, deleteEmployerById, login };
+const updateEmployerPassword = async (req, res, next) => {
+    const { id } = req.params;
+    const { password } = req.body;
+
+    try {
+        const updatedEmployer = await updateById(Employer, id, { password });
+
+        if (!updatedEmployer) {
+            return next(
+                new ApiError(
+                    `There is no employer with this id: ${id}`,
+                    httpStatus.NOT_FOUND
+                )
+            );
+        }
+
+        ApiDataSuccess.send(
+            `Employer ${id} updated successfully!`,
+            httpStatus.OK,
+            res,
+            updatedEmployer
+        );
+    } catch (error) {
+        return next(new ApiError(error.message, httpStatus.INTERNAL_SERVER_ERROR));
+    }
+};
+
+module.exports = { getEmployers, getEmployerById, createEmployer, updateEmployerById, deleteEmployerById, login, updateEmployerPassword };

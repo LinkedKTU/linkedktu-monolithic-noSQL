@@ -197,6 +197,33 @@ const updateStudentById = async (req, res, next) => {
     }
 };
 
+const updateStudentPassword = async (req, res, next) => {
+    const { id } = req.params;
+    const { password } = req.body;
+
+    try {
+        const updatedStudent = await updateById(Student, id, { password });
+
+        if (!updatedStudent) {
+            return next(
+                new ApiError(
+                    `There is no employer with this id: ${id}`,
+                    httpStatus.NOT_FOUND
+                )
+            );
+        }
+
+        ApiDataSuccess.send(
+            `Employer ${id} updated successfully!`,
+            httpStatus.OK,
+            res,
+            updatedStudent
+        );
+    } catch (error) {
+        return next(new ApiError(error.message, httpStatus.INTERNAL_SERVER_ERROR));
+    }
+};
+
 module.exports = {
     login,
     getStudents,
@@ -205,4 +232,5 @@ module.exports = {
     createStudent,
     deleteById,
     updateStudentById,
+    updateStudentPassword,
 };

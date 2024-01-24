@@ -49,27 +49,27 @@ const generateFakeData = async (Model, count) => {
     console.log(`${count} fake records inserted for ${Model.modelName}`);
 };
 
-const generateFakeDataForAllModels = async () => {
-    await generateFakeData(BaseUser, 100);
-    await generateFakeData(Employer, 100);
-    await generateFakeData(JobPost, 100);
-    await generateFakeData(Lecturer, 100);
-    await generateFakeData(Post, 100);
-    await generateFakeData(Student, 100);
-    mongoose.connection.close();
-};
-
 // const generateFakeDataForAllModels = async () => {
-//     await Promise.all([
-//         generateFakeData(BaseUser, 100),
-//         generateFakeData(Employer, 100),
-//         generateFakeData(JobPost, 100),
-//         generateFakeData(Lecturer, 100),
-//         generateFakeData(Post, 100),
-//         generateFakeData(Student, 100)
-//     ]);
-
+//     await generateFakeData(BaseUser, 100);
+//     await generateFakeData(Employer, 100);
+//     await generateFakeData(JobPost, 100);
+//     await generateFakeData(Lecturer, 100);
+//     await generateFakeData(Post, 100);
+//     await generateFakeData(Student, 100);
 //     mongoose.connection.close();
 // };
+
+ const generateFakeDataForAllModels = async () => {
+    await Promise.all([
+        generateFakeData(BaseUser, 10000),
+        generateFakeData(Employer, 10000),
+        generateFakeData(JobPost, 10000),
+        generateFakeData(Lecturer, 10000),
+        generateFakeData(Post, 10000),
+        generateFakeData(Student, 10000)
+    ]);
+
+    mongoose.connection.close();
+};
 
 module.exports = { generateFakeDataForAllModels };
