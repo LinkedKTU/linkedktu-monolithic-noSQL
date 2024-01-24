@@ -7,6 +7,8 @@ const {
     create,
     getOneByQuery,
     sendEmail,
+    updateById,
+    deleteById,
 } = require('../services/base-service');
 const Employer = require('../models/employer.model');
 const { v4: uuidv4 } = require('uuid');
@@ -16,56 +18,38 @@ const login = async (req, res, next) => {
     let employer;
 
     try {
-        employer = await getOneByQuery(Employer.name, 'Email', req.body.email);
+        employer = await getOneByQuery(Employer, 'email', req.body.email);
     } catch (error) {
         return next(new ApiError(error.message, httpStatus.NOT_FOUND));
     }
 
-    if (employer && employer[0].length === 0) {
-        return next(
-            new ApiError(
-                'Email or password is incorrect!',
-                httpStatus.BAD_REQUEST
-            )
-        );
+    employer = employer[0];
+
+    if(employer.password !== req.body.password) {
+        return next(new ApiError('Email or password is incorrect!', httpStatus.BAD_REQUEST));
     }
 
-    const employerObject = employer[0][0];
-
-    const validPassword = employerObject.Password === req.body.password;
-
-    if (!validPassword) {
-        return next(
-            new ApiError('Email or passwors is incorrect!'),
-            httpStatus.BAD_REQUEST
-        );
-    }
-
-    const access_token = createLoginToken(employerObject, res);
+    const access_token = createLoginToken(employer, res);
 
     ApiDataSuccess.send('Login succesfull!', httpStatus.OK, res, {
-        access_token: access_token,
+       access_token
     });
 };
 
 const getEmployers = async (req, res, next) => {
     try {
-        var employers = await getAll(Employer.name);
-    } catch (error) {
-        return next(new ApiError(error.message, httpStatus.NOT_FOUND));
-    }
+        var employers = await getAll(Employer);
 
-    if (employers && employers[0].length === 0) {
-        return next(
-            new ApiError('There have been an error!', httpStatus.NOT_FOUND)
+        ApiDataSuccess.send(
+            'Employers fetched succesfully!',
+            httpStatus.OK,
+            res,
+            employers
         );
+    } catch (error) {
+        console.log(error);
+        return next(new ApiError(error.message, httpStatus.INTERNAL_SERVER_ERROR));
     }
-    ApiDataSuccess.send(
-        'Employers fetched succesfully!',
-        httpStatus.OK,
-        res,
-        employers[0]
-    );
 };
 
 const getEmployerById = async (req, res, next) => {
@@ -73,12 +57,12 @@ const getEmployerById = async (req, res, next) => {
     let employer;
 
     try {
-        employer = await getOneById(Employer.name, id);
+        employer = await getOneById(Employer, id);
     } catch (error) {
         return next(new ApiError(error.message, httpStatus.NOT_FOUND));
     }
 
-    if (employers && employer[0].length === 0) {
+    if (employer && employer[0].length === 0) {
         return next(
             new ApiError(
                 `There are no employers with this id: ${id}`,
@@ -97,17 +81,25 @@ const getEmployerById = async (req, res, next) => {
 
 const createEmployer = async (req, res, next) => {
     const employerData = {
-        ID: uuidv4(),
        ...req.body
     };
 
     try {
-        var employer = await create(Employer.name, employerData);
+        var existingEmployer = await getOneByQuery(Employer, "email", req.body.email);
+        if(existingEmployer[0]) {
+            return next(new ApiError('Employer with this email already exists!', httpStatus.BAD_REQUEST));
+        }
+    } catch (error) {
+    }
+
+    try {
+        var employer = await create(Employer, employerData);
     } catch (error) {
         return next(new ApiError(error.message, httpStatus.NOT_FOUND));
     }
 
-    sendEmail(email, fullname, password);
+    console.log('employer: ', employer);
+    // sendEmail(email, fullname, password);
 
     ApiDataSuccess.send(
         'Employer created succesfully!',
@@ -119,51 +111,42 @@ const createEmployer = async (req, res, next) => {
 
 const updateEmployerById = async (req, res, next) => {
     const { id } = req.params;
-
-    const updatedEmployerData = {};
-
-    let entries = Object.entries(req.body);
-
-    for (const [key, value] of entries) {
-        if (value) {
-            updatedEmployerData[key] = value;
-        }
-    }
+    const updateData = req.body; 
 
     try {
-        var updatedEmployer = await update(Employer.name, id, updatedEmployerData);
-    } catch (error) {
-        return next(new ApiError(error.message, httpStatus.NOT_FOUND));
-    }
+        const updatedEmployer = await updateById(Employer, id, updateData);
 
-    if (!updatedEmployer || updatedEmployer[0].length === 0) {
-        return next(
-            new ApiError(
-                `There are no employers with this id: ${id}`,
-                httpStatus.BAD_REQUEST
-            )
+        if (!updatedEmployer) {
+            return next(
+                new ApiError(
+                    `There is no employer with this id: ${id}`,
+                    httpStatus.NOT_FOUND
+                )
+            );
+        }
+
+        ApiDataSuccess.send(
+            `Employer ${id} updated successfully!`,
+            httpStatus.OK,
+            res,
+            updatedEmployer
         );
+    } catch (error) {
+        return next(new ApiError(error.message, httpStatus.INTERNAL_SERVER_ERROR));
     }
-
-    ApiDataSuccess.send(
-        `Employer ${id} updated successfully!`,
-        httpStatus.OK,
-        res,
-        updatedEmployer[0]
-    );
 };
 
 const deleteEmployerById = async (req, res, next) => {
     const { id } = req.params;
 
     try {
-        const deletedEmployer = await deleteById(Employer.name, id);
-        
-        if (!deletedEmployer || deletedEmployer[0].length === 0) {
+        const deletedEmployer = await Employer.findByIdAndDelete(id);
+
+        if (!deletedEmployer) {
             return next(
                 new ApiError(
-                    `There are no employers with this id: ${id}`,
-                    httpStatus.BAD_REQUEST
+                    `There is no employer with this id: ${id}`,
+                    httpStatus.NOT_FOUND
                 )
             );
         }
@@ -174,10 +157,8 @@ const deleteEmployerById = async (req, res, next) => {
             res
         );
     } catch (error) {
-        return next(new ApiError(error.message, httpStatus.NOT_FOUND));
+        return next(new ApiError(error.message, httpStatus.INTERNAL_SERVER_ERROR));
     }
 };
 
 module.exports = { getEmployers, getEmployerById, createEmployer, updateEmployerById, deleteEmployerById, login };
-
-

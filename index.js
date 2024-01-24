@@ -6,9 +6,12 @@ const errorHandler = require('./middlewares/error-handler.middleware');
 const events = require('./events');
 require('dotenv').config();
 
-loaders();
+// const { generateFakeDataForAllModels } = require('./seed/seed');
 
+loaders();
 events();
+
+// generateFakeDataForAllModels();
 
 const app = express();
 app.use(express.json());

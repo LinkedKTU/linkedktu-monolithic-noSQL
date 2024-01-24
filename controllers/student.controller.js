@@ -9,6 +9,7 @@ const {
     getAllByQuery,
     create,
     sendEmail,
+    updateById,
 } = require('../services/base-service');
 const { createLoginToken } = require('../scripts/helpers/jwt.helper');
 const Student = require('../models/student.model');
@@ -16,65 +17,47 @@ const passwordHelper = require('../scripts/helpers/password.helper');
 const { v4: uuidv4 } = require('uuid');
 
 const login = async (req, res, next) => {
-    const student = await getOneByQuery(Student.name, {
-        email: req.body.email,
-    });
-
-    if (student <= 0) {
-        return next(
-            new ApiError(
-                'Email or password is incorrect',
-                httpStatus.BAD_REQUEST
-            )
-        );
-    }
-
-    const validPassword = await bcrypt.compare(
-        req.body.password,
-        student.password
-    );
-
-    if (!validPassword) {
-        return next(
-            new ApiError(
-                'Email or password is incorrect',
-                httpStatus.BAD_REQUEST
-            )
-        );
-    }
-
-    const access_token = createLoginToken(student, res);
-
-    ApiDataSuccess.send('Login succesfull', httpStatus.OK, res, access_token);
-};
-
-const createStudent = async (req, res, next) => {
     let student;
+    
     try {
-        student = await getOneByQuery(Student.name, 'Email', email);
+        student = await getOneByQuery(Student, 'email', req.body.email);
     } catch (error) {
         return next(new ApiError(error.message, httpStatus.NOT_FOUND));
     }
 
-    // TODO theese should be updated after db connection
-    if (student && (!student[0])) {
-        return next(
-            new ApiError('This email already in use!', httpStatus.BAD_REQUEST)
-        );
-    } 
+    student = student[0];
 
-    const studentPassword = (await passwordHelper.passwordToHash(password))
-        .hashedPassword;
+    if(student.password !== req.body.password) {
+        return next(new ApiError('Email or password is incorrect!', httpStatus.BAD_REQUEST));
+    }
+
+    const access_token = createLoginToken(student, res);
+
+    ApiDataSuccess.send('Login succesfull', httpStatus.OK, res, { access_token });
+};  
+
+const createStudent = async (req, res, next) => {
+    let student;
+    try {
+        student = await getOneByQuery(Student, 'email', req.body.email);
+        console.log(student);
+        if(student[0]) {
+            return next(new ApiError('Student with this email already exists!', httpStatus.BAD_REQUEST));
+        }
+    } catch (error) {
+    }
 
     const studentData = {
-        ID: uuidv4(),
-        Password: studentPassword,
         ...req.body,
     };
 
-    sendEmail(email, fullname, studentPassword);
+    // sendEmail(email, fullname, studentPassword);
 
-    const createdStudent = await create(Student.name, studentData);
+    try {
+        var createdStudent = await create(Student, studentData);
+    } catch (error) {
+        return next(new ApiError(error.message, httpStatus.NOT_FOUND));
+    }
 
     ApiDataSuccess.send(
         'Student created succesfully!',
@@ -88,22 +71,18 @@ const getStudents = async (req, res, next) => {
     let result;
 
     try {
-        result = await getAll(Student.name);
+        result = await getAll(Student);
     } catch (error) {
         return next(new ApiError(error.message, httpStatus.NOT_FOUND));
     }
 
-    if (!(result[0].length === 0)) {
-        return next(
-            new ApiError('There have been an error', httpStatus.BAD_REQUEST)
-        );
-    }
+    console.log(result);
 
     ApiDataSuccess.send(
         'Students fetched succesfully',
         httpStatus.OK,
         res,
-        result[0]
+        result
     );
 };
 
@@ -112,12 +91,12 @@ const getStudentById = async (req, res, next) => {
     let student;
 
     try {
-        student = await getOneById(Student.name, id, next);
+        student = await getOneById(Student, id, next);
     } catch (error) {
         return next(new ApiError(error.message, httpStatus.NOT_FOUND));
     }
 
-    if (student[0].length === 0) {
+    if (!student) {
         return next(
             new ApiError(
                 `There is no student with this id: ${id}`,
@@ -130,7 +109,7 @@ const getStudentById = async (req, res, next) => {
         'Student with given id found',
         httpStatus.OK,
         res,
-        student[0]
+        student
     );
 };
 
@@ -140,8 +119,8 @@ const getStudentsByTechnology = async (req, res, next) => {
 
     try {
         studentsWithGivenTech = await getAllByQuery(
-            Student.name,
-            'Technologies',
+            Student,
+            'technologies',
             technology
         );
     } catch (error) {
@@ -165,10 +144,65 @@ const getStudentsByTechnology = async (req, res, next) => {
     );
 };
 
+const deleteById = async (req, res, next) => {
+    const { id } = req.params;
+    
+    try {
+        const deletedStudent = await Student.findByIdAndDelete(id);
+
+        if (!deletedStudent) {
+            return next(
+                new ApiError(
+                    `There is no student with this id: ${id}`,
+                    httpStatus.NOT_FOUND
+                )
+            );
+        }
+
+        ApiDataSuccess.send(
+            `Student ${id} deleted successfully`,
+            httpStatus.OK,
+            res,
+            deletedStudent
+        );
+    } catch (error) {
+        return next(new ApiError(error.message, httpStatus.INTERNAL_SERVER_ERROR));
+    }
+};
+
+const updateStudentById = async (req, res, next) => {
+    const { id } = req.params;
+    const updateData = req.body; 
+
+    try {
+        const updatedStudent = await updateById(Student, id, updateData);
+
+        if (!updatedStudent) {
+            return next(
+                new ApiError(
+                    `There is no student with this id: ${id}`,
+                    httpStatus.NOT_FOUND
+                )
+            );
+        }
+
+        ApiDataSuccess.send(
+            `Student ${id} updated successfully!`,
+            httpStatus.OK,
+            res,
+            updatedStudent
+        );
+    } catch (error) {
+        return next(new ApiError(error.message, httpStatus.INTERNAL_SERVER_ERROR));
+    }
+};
+
 module.exports = {
     login,
     getStudents,
     getStudentById,
     getStudentsByTechnology,
     createStudent,
+    deleteById,
+    updateStudentById,
 };

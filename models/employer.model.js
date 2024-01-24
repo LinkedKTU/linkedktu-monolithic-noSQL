@@ -10,14 +10,32 @@ const EmployerSchema = new Schema({
     isInternshipRemote: {
         type: Boolean,
     },
+    email: {
+        type: String,
+    },
     isWorkRemote: {
         type: Boolean,
+    },
+    password: {
+        type: String,
+    },
+    name: {
+        type: String,
     },
     technologies: {
         type: [String],
     },
     languages: {
         type: [String],
+    },
+    description: {
+        type: String,
+    },
+    image: {
+        type: String,
+    },
+    accountType: {
+        type: String,
     },
     jobPosts: [{
         type: Schema.Types.ObjectId,

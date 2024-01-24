@@ -8,6 +8,26 @@ const LecturerSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'Student',
     }],
+    email: {
+        type: String,
+    },
+    password: {
+        type: String,
+    },
+    name: {
+        type: String,
+    },
+    description: {
+        type: String,
+    },
+    image: {
+        type: String,
+    },
+    accountType: {
+        type: String,
+    },
+    phone: String,
+    address: String,
 });
 
 const Lecturer = mongoose.model('Lecturer', LecturerSchema);

@@ -14,7 +14,7 @@ const getJobPosts = async (req, res, next) => {
     let jobPosts;
 
     try {
-        jobPosts = await getAll(JobPost.name);
+        jobPosts = await getAll(JobPost);
     } catch (error) {
         return next(new ApiError(error.message, httpStatus.NOT_FOUND));
     }
@@ -38,7 +38,7 @@ const getJobPostById = async (req, res, next) => {
     let jobPost;
 
     try {
-        jobPost = await getOneById(JobPost.name, id);
+        jobPost = await getOneById(JobPost, id);
     } catch (error) {
         return next(new ApiError(error.message, httpStatus.NOT_FOUND));
     }
@@ -90,7 +90,7 @@ const createJobPost = async (req, res, next) => {
     let jobPost;
 
     try {
-        jobPost = await create(JobPost.name, jobPostData);
+        jobPost = await create(JobPost, jobPostData);
     } catch (error) {
         return next(new ApiError(error.message, httpStatus.NOT_FOUND));
     }
@@ -114,7 +114,7 @@ const deleteJobPost = async (req, res, next) => {
     let deletedJobPost;
 
     try {
-        deletedJobPost = await deleteById(JobPost.name, id);
+        deletedJobPost = await deleteById(JobPost, id);
     } catch (error) {
         return next(new ApiError(error.message, httpStatus.NOT_FOUND));
     }

@@ -19,6 +19,11 @@ const JobPostSchema = new Schema({
     }],
 });
 
+JobPostSchema.pre('find', function (next) {
+    this.populate('applicants');
+    next();
+});
+
 const JobPost = mongoose.model('JobPost', JobPostSchema);
 
 module.exports = JobPost;

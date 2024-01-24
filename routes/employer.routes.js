@@ -10,4 +10,8 @@ router.route('/auth/register').post(employerController.createEmployer);
 
 router.route('/auth/login').post(employerController.login);
 
+router.route('/:id').delete(employerController.deleteEmployerById);
+
+router.route('/:id').put(employerController.updateEmployerById);
+
 module.exports = router;

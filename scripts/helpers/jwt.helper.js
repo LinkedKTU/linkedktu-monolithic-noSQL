@@ -4,7 +4,7 @@ const createLoginToken = (user, res) => {
     const token = jwt.sign(
         {
             // check id here
-            id: user.ID,
+            id: user._id,
             email: user.email,
         },
         process.env.JWT_ACCESS_SECRET,

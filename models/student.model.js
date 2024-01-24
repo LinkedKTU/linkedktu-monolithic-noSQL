@@ -6,25 +6,29 @@ const JobPost = require('./job-post.model');
 const Lecturer = require('./lecturer.model');
 
 const StudentSchema = new Schema({
-    school: {
+    email: {
         type: String,
         required: true,
+    },
+    password: {
+        type: String,
+    },
+    school: {
+        type: String,
     },
     city: {
         type: String,
-        required: true,
+    },
+    name: {
+        type: String,
     },
     technologies: {
         type: [String],
-        required: true,
     },
     languages: {
         type: [String],
     },
-    experience: [{
-        type: Schema.Types.ObjectId,
-        ref: 'Post',
-    }],
+    experience: [String],
     appliedJobs: [{
         type: Schema.Types.ObjectId,
         ref: 'JobPost',
@@ -33,6 +37,13 @@ const StudentSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'Lecturer',
     }],
+    phone: String,
+    address: String,
+});
+
+StudentSchema.pre('find', function (next) {
+    this.populate('appliedJobs');
+    next();
 });
 
 const Student = mongoose.model('Student', StudentSchema);
