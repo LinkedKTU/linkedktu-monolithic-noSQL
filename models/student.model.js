@@ -39,6 +39,7 @@ const StudentSchema = new Schema({
     }],
     phone: String,
     address: String,
+    image : String,
 });
 
 StudentSchema.pre('find', function (next) {
