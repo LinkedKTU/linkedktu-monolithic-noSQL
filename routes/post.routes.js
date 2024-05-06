@@ -19,4 +19,8 @@ router
     .route('/jobposts/delete/:id')
     .delete(postController.deleteJobPost);
 
+router
+    .route('/jobposts/update/:id')
+    .put(postController.updateJobPostById);
+
 module.exports = router;

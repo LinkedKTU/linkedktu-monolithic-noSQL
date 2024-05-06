@@ -5,6 +5,7 @@ const {
     getOneById,
     create,
     deleteById,
+    updateById,
 } = require('../services/base-service');
 const JobPost = require('../models/job-post.model');
 const httpStatus = require('http-status');
@@ -43,24 +44,22 @@ const getJobPostById = async (req, res, next) => {
         return next(new ApiError(error.message, httpStatus.NOT_FOUND));
     }
 
-    // CHECK HERE!
-    if (jobPost[0].length === 0) {
+    if (!jobPost) {
         return next(
             new ApiError(
-                `There are no job post with id of ${id}`,
+                `There is no job post with id of ${id}`,
                 httpStatus.BAD_REQUEST
             )
         );
     }
 
     ApiDataSuccess.send(
-        `Jobpost with id of ${id} fetched!`,
+        `Job post with id of ${id} fetched!`,
         httpStatus.OK,
         res,
         jobPost
     );
 };
-
 const createJobPost = async (req, res, next) => {
     const {
         title,

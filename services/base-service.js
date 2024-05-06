@@ -55,6 +55,13 @@ const updateById = async (model, id, updateData) => {
     return updatedResult;
 };
 
+const updatePasswordById = async (model, id, password) => {
+    const updateData = { password };
+    const options = { new: true, runValidators: true };
+    const updatedResult = await updateById(model, id, updateData, options);
+    return updatedResult;
+};
+
 
 // const updateByQuery = async (model, query, data) => '';
 
@@ -71,4 +78,5 @@ module.exports = {
     deleteById,
     // deleteByQuery,
     sendEmail,
+    updatePasswordById,
 };

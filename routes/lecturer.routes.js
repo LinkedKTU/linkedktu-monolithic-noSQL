@@ -14,4 +14,7 @@ router.route('/:id').delete(lecturerController.deleteLecturerById);
 
 router.route('/:id').put(lecturerController.updateLecturerById);
 
+router.route('/update-password/:id').put(lecturerController.updateLecturerById);
+
+
 module.exports = router;

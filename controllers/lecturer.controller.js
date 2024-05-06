@@ -60,12 +60,12 @@ const getLecturerById = async (req, res, next) => {
     let lecturer;
 
     try {
-        lecturer = await getOneById(Lecturer, id);
+        lecturer = await getOneById(Lecturer, id, next);
     } catch (error) {
         return next(new ApiError(error.message, httpStatus.NOT_FOUND));
     }
 
-    if (lecturer[0].length === 0) {
+    if (!lecturer) {
         return next(
             new ApiError(
                 `There are no lecturer with id of ${id}`,
@@ -75,7 +75,7 @@ const getLecturerById = async (req, res, next) => {
     }
 
     ApiDataSuccess.send(
-        `Lecturer with id of ${id} fetched!`,
+        'Student with given id found',
         httpStatus.OK,
         res,
         lecturer
@@ -133,29 +133,58 @@ const updateLecturerById = async (req, res, next) => {
 
 const deleteLecturerById = async (req, res, next) => {
     const { id } = req.params;
-    let lecturer;
 
     try {
-        lecturer = await deleteById(Lecturer, id);
-    } catch (error) {
-        return next(new ApiError(error.message, httpStatus.NOT_FOUND));
-    }
+        const deletedLecturer = await deleteById(Lecturer, id);
 
-    if (!lecturer) {
-        return next(
-            new ApiError(
-                `There are no lecturer with id of ${id}`,
-                httpStatus.BAD_REQUEST
-            )
+        if (!deletedLecturer) {
+            return next(
+                new ApiError(
+                    `There are no lecturer with id of ${id}`,
+                    httpStatus.NOT_FOUND
+                )
+            );
+        }
+
+        ApiDataSuccess.send(
+            `Lecturer with id of ${id} deleted!`,
+            httpStatus.OK,
+            res,
+            deletedLecturer
         );
+    } catch (error) {
+        return next(new ApiError(error.message, httpStatus.INTERNAL_SERVER_ERROR));
     }
-
-    ApiDataSuccess.send(
-        `Lecturer with id of ${id} deleted!`,
-        httpStatus.OK,
-        res,
-        lecturer
-    );
 };
 
-module.exports = { login, getLecturers, getLecturerById, createLecturer, updateLecturerById, deleteLecturerById};
+const updateLecturerPassword = async (req, res, next) => {
+    const { id } = req.params;
+    const { password } = req.body;
+
+    try {
+        const updatedLecturer = await updatePasswordById(Lecturer, id, password);
+
+        if (!updatedLecturer) {
+            return next(
+                new ApiError(
+                    `There is no lecturer with this id: ${id}`,
+                    httpStatus.NOT_FOUND
+                )
+            );
+        }
+
+        ApiDataSuccess.send(
+            `Lecturer ${id} password updated successfully!`,
+            httpStatus.OK,
+            res,
+            updatedLecturer
+        );
+    } catch (error) {
+        return next(new ApiError(error.message, httpStatus.INTERNAL_SERVER_ERROR));
+    }
+};
+
+
+
+
+module.exports = { login, getLecturers, getLecturerById, createLecturer, updateLecturerById, updateLecturerPassword, deleteLecturerById};

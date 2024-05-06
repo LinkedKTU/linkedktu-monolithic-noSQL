@@ -10,6 +10,7 @@ const {
     create,
     sendEmail,
     updateById,
+    updatePasswordById,
 } = require('../services/base-service');
 const { createLoginToken } = require('../scripts/helpers/jwt.helper');
 const Student = require('../models/student.model');
@@ -202,7 +203,7 @@ const updateStudentPassword = async (req, res, next) => {
     const { password } = req.body;
 
     try {
-        const updatedStudent = await updateById(Student, id, { password });
+        const updatedStudent = await updatePasswordById(Student, id, { password });
 
         if (!updatedStudent) {
             return next(
@@ -214,7 +215,7 @@ const updateStudentPassword = async (req, res, next) => {
         }
 
         ApiDataSuccess.send(
-            `Employer ${id} updated successfully!`,
+            `Employer ${id} password updated successfully!`,
             httpStatus.OK,
             res,
             updatedStudent
@@ -223,6 +224,7 @@ const updateStudentPassword = async (req, res, next) => {
         return next(new ApiError(error.message, httpStatus.INTERNAL_SERVER_ERROR));
     }
 };
+
 
 module.exports = {
     login,

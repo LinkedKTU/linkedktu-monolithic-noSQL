@@ -6,12 +6,12 @@ const errorHandler = require('./middlewares/error-handler.middleware');
 const events = require('./events');
 require('dotenv').config();
 
-// const { generateFakeDataForAllModels } = require('./seed/seed');
+//const { generateFakeDataForAllModels } = require('./seed/seed');
 
 loaders();
 events();
 
-// generateFakeDataForAllModels();
+//generateFakeDataForAllModels();
 
 const app = express();
 app.use(express.json());
@@ -37,6 +37,7 @@ app.use('/students', routes.student);
 app.use('/lecturers', routes.lectuter);
 app.use('/employers', routes.employer);
 app.use('/posts', routes.post);
+app.use('/accounts', routes.account);
 
 app.use(errorHandler);
 

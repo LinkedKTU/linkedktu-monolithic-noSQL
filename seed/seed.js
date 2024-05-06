@@ -61,12 +61,12 @@ const generateFakeData = async (Model, count) => {
 
  const generateFakeDataForAllModels = async () => {
     await Promise.all([
-        generateFakeData(BaseUser, 10000),
-        generateFakeData(Employer, 10000),
-        generateFakeData(JobPost, 10000),
-        generateFakeData(Lecturer, 10000),
-        generateFakeData(Post, 10000),
-        generateFakeData(Student, 10000)
+        //generateFakeData(BaseUser, 10000),
+        //generateFakeData(Employer, 10000),
+        //generateFakeData(JobPost, 10000),
+        //generateFakeData(Lecturer, 10000),
+        //generateFakeData(Post, 10000),
+        generateFakeData(Student, 10)
     ]);
 
     mongoose.connection.close();

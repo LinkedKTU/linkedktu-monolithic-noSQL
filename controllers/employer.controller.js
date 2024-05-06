@@ -1,18 +1,22 @@
 const httpStatus = require('http-status');
-const ApiDataSuccess = require('../scripts/responses/success/api-data-success');
+const bcrypt = require('bcryptjs');
 const ApiError = require('../scripts/responses/error/api-error');
+const ApiDataSuccess = require('../scripts/responses/success/api-data-success');
 const {
+    getOneByQuery,
     getAll,
     getOneById,
+    getAllByQuery,
     create,
-    getOneByQuery,
     sendEmail,
     updateById,
+    updatePasswordById,
     deleteById,
 } = require('../services/base-service');
-const Employer = require('../models/employer.model');
-const { v4: uuidv4 } = require('uuid');
 const { createLoginToken } = require('../scripts/helpers/jwt.helper');
+const Employer = require('../models/employer.model');
+const passwordHelper = require('../scripts/helpers/password.helper');
+const { v4: uuidv4 } = require('uuid');
 
 const login = async (req, res, next) => {
     let employer;
@@ -31,25 +35,57 @@ const login = async (req, res, next) => {
 
     const access_token = createLoginToken(employer, res);
 
-    ApiDataSuccess.send('Login succesfull!', httpStatus.OK, res, {
+    ApiDataSuccess.send('Login successful!', httpStatus.OK, res, {
        access_token
     });
 };
 
-const getEmployers = async (req, res, next) => {
+const createEmployer = async (req, res, next) => {
+    let employer;
     try {
-        var employers = await getAll(Employer);
-
-        ApiDataSuccess.send(
-            'Employers fetched succesfully!',
-            httpStatus.OK,
-            res,
-            employers
-        );
+        employer = await getOneByQuery(Employer, 'email', req.body.email);
+        console.log(employer);
+        if(employer[0]) {
+            return next(new ApiError('Employer with this email already exists!', httpStatus.BAD_REQUEST));
+        }
     } catch (error) {
-        console.log(error);
-        return next(new ApiError(error.message, httpStatus.INTERNAL_SERVER_ERROR));
     }
+
+    const employerData = {
+        ...req.body,
+    };
+
+    try {
+        var createdEmployer = await create(Employer, employerData);
+    } catch (error) {
+        return next(new ApiError(error.message, httpStatus.NOT_FOUND));
+    }
+
+    ApiDataSuccess.send(
+        'Employer created successfully!',
+        httpStatus.OK,
+        res,
+        createdEmployer
+    );
+};
+
+const getEmployers = async (req, res, next) => {
+    let result;
+
+    try {
+        result = await getAll(Employer);
+    } catch (error) {
+        return next(new ApiError(error.message, httpStatus.NOT_FOUND));
+    }
+
+    console.log(result);
+
+    ApiDataSuccess.send(
+        'Employers fetched successfully',
+        httpStatus.OK,
+        res,
+        result
+    );
 };
 
 const getEmployerById = async (req, res, next) => {
@@ -57,55 +93,25 @@ const getEmployerById = async (req, res, next) => {
     let employer;
 
     try {
-        employer = await getOneById(Employer, id);
+        employer = await getOneById(Employer, id, next);
     } catch (error) {
         return next(new ApiError(error.message, httpStatus.NOT_FOUND));
     }
 
-    if (employer && employer[0].length === 0) {
+    if (!employer) {
         return next(
             new ApiError(
-                `There are no employers with this id: ${id}`,
+                `There is no employer with this id: ${id}`,
                 httpStatus.BAD_REQUEST
             )
         );
     }
 
     ApiDataSuccess.send(
-        `Employer ${id} fetched!`,
+        'Employer with given id found',
         httpStatus.OK,
         res,
-        employer[0]
-    );
-};
-
-const createEmployer = async (req, res, next) => {
-    const employerData = {
-       ...req.body
-    };
-
-    try {
-        var existingEmployer = await getOneByQuery(Employer, "email", req.body.email);
-        if(existingEmployer[0]) {
-            return next(new ApiError('Employer with this email already exists!', httpStatus.BAD_REQUEST));
-        }
-    } catch (error) {
-    }
-
-    try {
-        var employer = await create(Employer, employerData);
-    } catch (error) {
-        return next(new ApiError(error.message, httpStatus.NOT_FOUND));
-    }
-
-    console.log('employer: ', employer);
-    // sendEmail(email, fullname, password);
-
-    ApiDataSuccess.send(
-        'Employer created succesfully!',
-        httpStatus.OK,
-        res,
-        employer[0]
+        employer
     );
 };
 
@@ -138,7 +144,7 @@ const updateEmployerById = async (req, res, next) => {
 
 const deleteEmployerById = async (req, res, next) => {
     const { id } = req.params;
-
+    
     try {
         const deletedEmployer = await Employer.findByIdAndDelete(id);
 
@@ -152,9 +158,10 @@ const deleteEmployerById = async (req, res, next) => {
         }
 
         ApiDataSuccess.send(
-            `Employer ${id} deleted successfully!`,
+            `Employer ${id} deleted successfully`,
             httpStatus.OK,
-            res
+            res,
+            deletedEmployer
         );
     } catch (error) {
         return next(new ApiError(error.message, httpStatus.INTERNAL_SERVER_ERROR));
@@ -166,7 +173,7 @@ const updateEmployerPassword = async (req, res, next) => {
     const { password } = req.body;
 
     try {
-        const updatedEmployer = await updateById(Employer, id, { password });
+        const updatedEmployer = await updatePasswordById(Employer, id, { password });
 
         if (!updatedEmployer) {
             return next(
@@ -178,7 +185,7 @@ const updateEmployerPassword = async (req, res, next) => {
         }
 
         ApiDataSuccess.send(
-            `Employer ${id} updated successfully!`,
+            `Employer ${id} password updated successfully!`,
             httpStatus.OK,
             res,
             updatedEmployer
@@ -188,4 +195,12 @@ const updateEmployerPassword = async (req, res, next) => {
     }
 };
 
-module.exports = { getEmployers, getEmployerById, createEmployer, updateEmployerById, deleteEmployerById, login, updateEmployerPassword };
+module.exports = {
+    login,
+    createEmployer,
+    getEmployers,
+    getEmployerById,
+    updateEmployerById,
+    deleteEmployerById,
+    updateEmployerPassword,
+};
