@@ -23,4 +23,16 @@ router
     .route('/jobposts/update/:id')
     .put(postController.updateJobPostById);
 
+router
+    .route('/jobposts/employer/:employerId')
+    .get(postController.getJobPostsByEmployerId);
+
+router
+    .route('/default/student/:studentId')
+    .get(postController.getPostsByStudentId);
+
+router
+    .route('/default/')
+    .get(postController.getJobPosts);
+
 module.exports = router;

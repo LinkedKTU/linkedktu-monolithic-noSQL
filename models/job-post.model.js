@@ -1,27 +1,53 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
-const Student = require('./student.model');
-const Post = require('./post.model');
 
 const JobPostSchema = new Schema({
-    isRemote: {
-        type: Boolean,
-    },
-    salary: {
+    ID: {
         type: String,
+        required: true,
+        unique: true,
+    },
+    Title: {
+        type: String,
+        required: true,
+    },
+    Description: {
+        type: String,
+        required: false,
+    },
+    Company: {
+        type: String,
+        required: true,
+    },
+    Role: {
+        type: String,
+        required: true,
+    },
+    Technologies: {
+        type: [String],
+        required: true,
+    },
+    IsRemote: {
+        type: Boolean,
+        required: true,
+    },
+    Salary: {
+        type: Number,
+        required: true,
     },
     isAccepted: {
         type: Boolean,
+        default: false,
     },
-    applicants: [{
-        type: Schema.Types.ObjectId,
+    Applicants: {
+        type: [Schema.Types.ObjectId],
         ref: 'Student',
-    }],
-});
-
-JobPostSchema.pre('find', function (next) {
-    this.populate('applicants');
-    next();
+    },
+    EmployerId: {
+        type: Schema.Types.ObjectId,
+        ref: 'Employer',
+        required: true,
+    },
 });
 
 const JobPost = mongoose.model('JobPost', JobPostSchema);

@@ -2,6 +2,11 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const PostSchema = new Schema({
+    ID: {
+        type: String,
+        required: true,
+        unique: true,
+    },
     title: {
         type: String,
     },
@@ -15,7 +20,16 @@ const PostSchema = new Schema({
         type: String,
     },
     technologies: {
-        type: [String], // This represents an array of strings
+        type: [String], 
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now,
+    },
+    studentId: {
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'Student',
+        required: true,
     },
 });
 

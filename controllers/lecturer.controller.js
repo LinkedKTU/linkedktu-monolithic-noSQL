@@ -184,7 +184,30 @@ const updateLecturerPassword = async (req, res, next) => {
     }
 };
 
+const approveStudent = async (req, res, next) => {
+    const { lecturerId, studentId } = req.params;
+
+    try {
+        const lecturer = await Lecturer.findById(lecturerId);
+        if (!lecturer) {
+            return next(new ApiError('Lecturer not found', httpStatus.NOT_FOUND));
+        }
+
+        if (lecturer.approvedStudents.includes(studentId)) {
+            return next(new ApiError('Student already approved', httpStatus.BAD_REQUEST));
+        }
+
+        lecturer.approvedStudents.push(studentId);
+        await lecturer.save();
+
+        ApiDataSuccess.send('Student approved successfully', httpStatus.OK, res, lecturer);
+    } catch (error) {
+        console.log(error);
+        return next(new ApiError(error.message, httpStatus.INTERNAL_SERVER_ERROR));
+    }
+};
 
 
 
-module.exports = { login, getLecturers, getLecturerById, createLecturer, updateLecturerById, updateLecturerPassword, deleteLecturerById};
+
+module.exports = { login, getLecturers, getLecturerById, createLecturer, updateLecturerById, updateLecturerPassword, deleteLecturerById, approveStudent  };

@@ -6,8 +6,10 @@ const {
     create,
     deleteById,
     updateById,
+    getAllByQuery,
 } = require('../services/base-service');
 const JobPost = require('../models/job-post.model');
+const Post = require('../models/post.model');
 const httpStatus = require('http-status');
 const { v4: uuidv4 } = require('uuid');
 
@@ -71,6 +73,7 @@ const createJobPost = async (req, res, next) => {
         salary,
         isAccepted,
         applicants,
+        employerId,
     } = req.body;
 
     const jobPostData = {
@@ -84,6 +87,7 @@ const createJobPost = async (req, res, next) => {
         Salary: salary,
         isAccepted: isAccepted,
         Applicants: applicants,
+        EmployerId: employerId,
     };
 
     let jobPost;
@@ -96,7 +100,7 @@ const createJobPost = async (req, res, next) => {
 
     if (!jobPost) {
         return next(
-            new ApiError('There have been an error!', httpStatus.BAD_REQUEST)
+            new ApiError('There has been an error!', httpStatus.BAD_REQUEST)
         );
     }
 
@@ -160,4 +164,61 @@ const updateJobPostById = async (req, res, next) => {
     );
 };
 
-module.exports = { getJobPosts, getJobPostById, createJobPost, deleteJobPost, updateJobPostById };
+const getJobPostsByEmployerId = async (req, res, next) => {
+    const { employerId } = req.params;
+    let jobPosts;
+
+    try {
+        jobPosts = await getAllByQuery(JobPost, 'EmployerId', employerId);
+    } catch (error) {
+        return next(new ApiError(error.message, httpStatus.NOT_FOUND));
+    }
+
+    if (!jobPosts || jobPosts.length === 0) {
+        return next(new ApiError('No job posts found!', httpStatus.NOT_FOUND));
+    }
+
+    ApiDataSuccess.send('Job posts fetched successfully!', httpStatus.OK, res, jobPosts);
+};
+
+const getPostsByStudentId = async (req, res, next) => {
+    const { studentId } = req.params;
+    let posts;
+
+    try {
+        posts = await getAllByQuery(Post, 'StudentId', studentId);
+    } catch (error) {
+        return next(new ApiError(error.message, httpStatus.NOT_FOUND));
+    }
+
+    if (!posts || posts.length === 0) {
+        return next(new ApiError('No posts found!', httpStatus.NOT_FOUND));
+    }
+
+    ApiDataSuccess.send('Posts fetched successfully!', httpStatus.OK, res, posts);
+};
+
+const getDefaultPosts = async (req, res, next) => {
+    let Posts;
+
+    try {
+        Posts = await getAll(Post);
+    } catch (error) {
+        return next(new ApiError(error.message, httpStatus.NOT_FOUND));
+    }
+
+    if (Posts[0].length === 0) {
+        return next(
+            new ApiError('There are no job posts found!', httpStatus.NOT_FOUND)
+        );
+    }
+
+    ApiDataSuccess.send(
+        'Job posts fetched succesfully!',
+        httpStatus.OK,
+        res,
+        Posts
+    );
+};
+
+module.exports = { getJobPosts, getJobPostById, createJobPost, deleteJobPost, updateJobPostById, getJobPostsByEmployerId, getPostsByStudentId, getDefaultPosts };

@@ -16,5 +16,7 @@ router.route('/:id').put(lecturerController.updateLecturerById);
 
 router.route('/update-password/:id').put(lecturerController.updateLecturerById);
 
+router.route('/approve-student/:lecturerId/:studentId').post(lecturerController.approveStudent);
+
 
 module.exports = router;
