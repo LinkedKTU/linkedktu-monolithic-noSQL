@@ -17,6 +17,7 @@ const { createLoginToken } = require('../scripts/helpers/jwt.helper');
 const Employer = require('../models/employer.model');
 const passwordHelper = require('../scripts/helpers/password.helper');
 const { v4: uuidv4 } = require('uuid');
+const JobPost = require('../models/job-post.model');
 
 const login = async (req, res, next) => {
     let employer;
@@ -195,6 +196,79 @@ const updateEmployerPassword = async (req, res, next) => {
     }
 };
 
+const createJobPost = async (req, res, next) => {
+    const { employerId } = req.body;
+    let employer;
+
+    try {
+        employer = await Employer.findById(employerId);
+        if (!employer) {
+            return next(new ApiError(`No employer found with ID: ${employerId}`, httpStatus.NOT_FOUND));
+        }
+    } catch (error) {
+        return next(new ApiError(error.message, httpStatus.NOT_FOUND));
+    }
+
+    const jobPostData = {
+        ...req.body,
+        EmployerId: employer._id,
+    };
+
+    try {
+        const createdJobPost = await JobPost.create(jobPostData);
+        
+        // Check if jobPosts array exists, if not initialize it
+        if (!employer.jobPosts) {
+            employer.jobPosts = [];
+        }
+        
+        employer.jobPosts.push(createdJobPost._id);
+        await employer.save();
+
+        ApiDataSuccess.send(
+            'Job post created successfully!',
+            httpStatus.OK,
+            res,
+            createdJobPost
+        );
+    } catch (error) {
+        return next(new ApiError(error.message, httpStatus.INTERNAL_SERVER_ERROR));
+    }
+};
+
+const getJobPosts = async (req, res, next) => {
+    try {
+        const jobPosts = await JobPost.find().populate('EmployerId', null, null, { strictPopulate: false });
+        ApiDataSuccess.send(
+            'Job posts fetched successfully!',
+            httpStatus.OK,
+            res,
+            jobPosts
+        );
+    } catch (error) {
+        return next(new ApiError(error.message, httpStatus.INTERNAL_SERVER_ERROR));
+    }
+};
+
+const getJobPostsByEmployerId = async (req, res, next) => {
+    const { employerId } = req.params;
+
+    try {
+        const jobPosts = await JobPost.find({ EmployerId: employerId }).populate('EmployerId', null, null, { strictPopulate: false });
+        if (!jobPosts) {
+            return next(new ApiError(`No job posts found for employer ID: ${employerId}`, httpStatus.NOT_FOUND));
+        }
+        ApiDataSuccess.send(
+            'Job posts fetched successfully!',
+            httpStatus.OK,
+            res,
+            jobPosts
+        );
+    } catch (error) {
+        return next(new ApiError(error.message, httpStatus.INTERNAL_SERVER_ERROR));
+    }
+};
+
 module.exports = {
     login,
     createEmployer,
@@ -203,4 +277,7 @@ module.exports = {
     updateEmployerById,
     deleteEmployerById,
     updateEmployerPassword,
+    createJobPost,
+    getJobPosts,
+    getJobPostsByEmployerId,
 };
