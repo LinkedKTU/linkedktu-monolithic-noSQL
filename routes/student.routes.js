@@ -20,5 +20,6 @@ router.route('/:id').put(studentController.updateStudentById);
 
 router.route('/update-password/:id').put(studentController.updateStudentPassword);
 
+router.post('/:studentId/apply/:jobId', studentController.applyJob);
 
 module.exports = router;

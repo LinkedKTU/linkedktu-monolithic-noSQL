@@ -16,6 +16,7 @@ const { createLoginToken } = require('../scripts/helpers/jwt.helper');
 const Student = require('../models/student.model');
 const passwordHelper = require('../scripts/helpers/password.helper');
 const { v4: uuidv4 } = require('uuid');
+const JobPost = require('../models/job-post.model');
 
 const login = async (req, res, next) => {
     let student;
@@ -225,6 +226,42 @@ const updateStudentPassword = async (req, res, next) => {
     }
 };
 
+const applyJob = async (req, res, next) => {
+    const { studentId, jobId } = req.params;
+
+    try {
+        // Öğrenciyi ve iş ilanını bul
+        const student = await Student.findById(studentId);
+        const job = await JobPost.findById(jobId);
+
+        // Eğer öğrenci veya iş ilanı yoksa hata döndür
+        if (!student) {
+            return next(new ApiError(`Student with id ${studentId} not found`, httpStatus.NOT_FOUND));
+        }
+        if (!job) {
+            return next(new ApiError(`Job with id ${jobId} not found`, httpStatus.NOT_FOUND));
+        }
+
+        // Öğrencinin appliedJobs listesine iş ilanını ekle
+        student.appliedJobs.push(jobId);
+
+        // İş ilanının Applicants listesine öğrenciyi ekle
+        job.Applicants.push(studentId);
+
+        // Değişiklikleri kaydet
+        await student.save();
+        await job.save();
+
+        ApiDataSuccess.send(
+            'Job application successful',
+            httpStatus.OK,
+            res,
+            student
+        );
+    } catch (error) {
+        return next(new ApiError(error.message, httpStatus.INTERNAL_SERVER_ERROR));
+    }
+};
 
 module.exports = {
     login,
@@ -235,4 +272,5 @@ module.exports = {
     deleteById,
     updateStudentById,
     updateStudentPassword,
+    applyJob,
 };
